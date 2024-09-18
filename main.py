@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import random
 
 # Initialize Pygame
 pygame.init()
@@ -31,10 +32,30 @@ background_rect_one.x = 0
 background_rect_two = background.get_rect()
 background_rect_two.x = WIDTH
 
+
+def load_image(filename):
+    # convert to alpha as more performant
+    return pygame.image.load(os.path.join("assets", "images", f"{filename}.png")).convert_alpha()
+
+
 # Player
-player = pygame.image.load(os.path.join("assets", "images", "spaceship_pl.png")).convert_alpha() # more performant if converted
+player = load_image("spaceship_pl")
 player_rect = player.get_rect()
 player_rect.midleft = (25, HEIGHT // 2) # double slash for integer division
+
+# Enemies
+
+enemy_one = load_image("spaceship_en_one")
+enemy_two = load_image("spaceship_en_two")
+enemy_three = load_image("spaceship_en_three")
+enemy_four = load_image("spaceship_en_four")
+enemy_five = load_image("spaceship_en_five")
+
+enemy_images = [enemy_one, enemy_two, enemy_three, enemy_four, enemy_five]
+enemy_speed = 5
+enemy_spawn_rate = 3000
+last_enemy_spawn = 0
+enemies = []
 
 # Main game loop
 running = True
@@ -44,7 +65,8 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # Game logic 
+    # Game logic
+    current_time = pygame.time.get_ticks()
 
     # Background scrolling
     if background_rect_one.x < -800:
@@ -62,6 +84,28 @@ while running:
     if keys[pygame.K_DOWN] and player_rect.bottom < HEIGHT:
         player_rect.y += PLAYER_SPEED
 
+    # Enemy movement
+    for enemy_image, enemy_rect in enemies:
+        enemy_rect.x -= enemy_speed
+    
+    enemies = [(enemy_image, enemy_rect) for enemy_image, enemy_rect in enemies if enemy_rect.right > 0]
+        
+
+    # Enemy spawning
+    if current_time - last_enemy_spawn > enemy_spawn_rate:
+        enemy_image = random.choice(enemy_images)
+        enemy_rect = enemy_image.get_rect()
+        enemy_rect.x = (WIDTH + enemy_rect.width)
+        lane = random.randint(1, 3)
+        if lane == 1:
+            enemy_rect.y = 0
+        elif lane == 2:
+            enemy_rect.y = (HEIGHT // 2) - (enemy_rect.height // 2)
+        else:
+            enemy_rect.y = HEIGHT - enemy_rect.height
+        enemies.append((enemy_image, enemy_rect))
+        last_enemy_spawn = current_time
+
 
     # Draw surfaces 
     # screen.fill("#4c43ea") # if you want to fill with single colour
@@ -69,6 +113,8 @@ while running:
     screen.blit(background, background_rect_one)
     screen.blit(background, background_rect_two)
     screen.blit(player, player_rect)
+    for enemy_image, enemy_rect in enemies:
+        screen.blit(enemy_image, enemy_rect)
 
     # Update display
     pygame.display.update()
