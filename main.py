@@ -103,10 +103,15 @@ while running:
         # Enemy movement
         for enemy_image, enemy_rect in enemies:
             enemy_rect.x -= enemy_speed
-        
+        # then get rid of enemies that have left screen to avoid memory issues
         enemies = [(enemy_image, enemy_rect) for enemy_image, enemy_rect in enemies if enemy_rect.right > 0]
-            
+        
+        # Collision detection
+        for enemy_image, enemy_rect in enemies:
+            if enemy_rect.colliderect(player_rect):
+                game_over = True
 
+        
         # Enemy spawning
         if current_time - last_enemy_spawn > enemy_spawn_rate:
             enemy_image = random.choice(enemy_images)
@@ -135,6 +140,9 @@ while running:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RETURN]:
             game_over = False
+            player_rect.midleft = (25, HEIGHT // 2)
+
+        enemies.clear()
         screen.blit(background, (0, 0))
         screen.blit(title_text, title_text_rect)
         screen.blit(instruction_text, instruction_text_rect)
