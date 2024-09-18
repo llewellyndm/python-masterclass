@@ -13,6 +13,7 @@ FPS = 60 # max fps if computer can handle it
 PLAYER_SPEED = 5
 BACKGROUND_SCROLL_SPEED = 2
 WHITE = (255, 255, 255)
+BULLET_SPEED = 5
 
 # Create a Pygame window and set its dimensions
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -55,6 +56,12 @@ enemy_speed = 5
 enemy_spawn_rate = 3000
 last_enemy_spawn = 0
 enemies = []
+
+# Bullets
+bullet = load_image("bullet")
+bullet_cooldown = 800
+last_bullet_time = 0
+bullets = []
 
 # Title screen
 title_font = pygame.font.Font(os.path.join("assets", "fonts", "LuckiestGuy-Regular.ttf"), 72)
@@ -99,6 +106,19 @@ while running:
             player_rect.y -= PLAYER_SPEED
         if keys[pygame.K_DOWN] and player_rect.bottom < HEIGHT:
             player_rect.y += PLAYER_SPEED
+        
+        # Shoot bullets
+        if keys[pygame.K_SPACE] and current_time - last_bullet_time > bullet_cooldown:
+            bullet_image = bullet
+            bullet_rect = bullet_image.get_rect()
+            bullet_rect.center = player_rect.center
+            bullets.append((bullet_image, bullet_rect))
+            last_bullet_time = current_time
+
+        # Bullet movement
+        for bullet_image, bullet_rect in bullets:
+            bullet_rect.x += 5
+        bullets = [(bullet_image, bullet_rect) for bullet_image, bullet_rect in bullets if bullet_rect.left < WIDTH]
 
         # Enemy movement
         for enemy_image, enemy_rect in enemies:
@@ -110,6 +130,10 @@ while running:
         for enemy_image, enemy_rect in enemies:
             if enemy_rect.colliderect(player_rect):
                 game_over = True
+            for bullet_image, bullet_rect in bullets:
+                if enemy_rect.colliderect(bullet_rect):
+                    enemies.remove((enemy_image, enemy_rect))
+                    bullets.remove((bullet_image, bullet_rect))
 
         
         # Enemy spawning
@@ -129,6 +153,7 @@ while running:
 
 
         # Draw surfaces 
+
         # screen.fill("#4c43ea") # if you want to fill with single colour
         # draws the following in order i.e. bgs first, then player
         screen.blit(background, background_rect_one)
@@ -136,13 +161,17 @@ while running:
         screen.blit(player, player_rect)
         for enemy_image, enemy_rect in enemies:
             screen.blit(enemy_image, enemy_rect)
+        for bullet_image, bullet_rect in bullets:
+            screen.blit(bullet_image, bullet_rect)
+        
+            
     else:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_RETURN]:
             game_over = False
             player_rect.midleft = (25, HEIGHT // 2)
-
         enemies.clear()
+        bullets.clear()
         screen.blit(background, (0, 0))
         screen.blit(title_text, title_text_rect)
         screen.blit(instruction_text, instruction_text_rect)
