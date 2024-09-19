@@ -73,6 +73,12 @@ spaceship_rect.topleft = (25, 25)
 score_font = load_font(32)
 score = 0
 
+# Lives
+heart = load_image("heart")
+heart_rect = heart.get_rect()
+heart_rect.bottomleft = (25, 575)
+lives = 3
+
 # Title screen
 title_font = load_font(72)
 instruction_font = load_font(32)
@@ -121,7 +127,7 @@ while running:
         if keys[pygame.K_SPACE] and current_time - last_bullet_time > bullet_cooldown:
             bullet_image = bullet
             bullet_rect = bullet_image.get_rect()
-            bullet_rect.center = player_rect.center
+            bullet_rect.center = player_rect.midright
             bullets.append((bullet_image, bullet_rect))
             last_bullet_time = current_time
 
@@ -139,15 +145,28 @@ while running:
         # Collision detection
         for enemy_image, enemy_rect in enemies:
             if enemy_rect.colliderect(player_rect):
-                game_over = True
+                lives -= 1
+                enemies.remove((enemy_image, enemy_rect))
             for bullet_image, bullet_rect in bullets:
-                if enemy_rect.colliderect(bullet_rect):
+                if enemy_rect.colliderect(bullet_rect) and enemy_rect.right <= 800:
                     score += 1
                     enemies.remove((enemy_image, enemy_rect))
                     bullets.remove((bullet_image, bullet_rect))
 
         # Update score
         score_text = score_font.render(f"{score}", True, WHITE)
+        if score > 2:
+            enemy_spawn_rate = 2500
+        if score > 4:
+            enemy_spawn_rate = 2000
+        if score > 6:
+            enemy_spawn_rate = 1500
+        if score > 8:
+            enemy_spawn_rate = 1000
+
+        # Update lives
+        lives_text = score_font.render(f"{lives}", True, WHITE)
+        game_over = lives < 1
         
         # Enemy spawning
         if current_time - last_enemy_spawn > enemy_spawn_rate:
@@ -171,13 +190,15 @@ while running:
         # draws the following in order i.e. bgs first, then player
         screen.blit(background, background_rect_one)
         screen.blit(background, background_rect_two)
+        for bullet_image, bullet_rect in bullets:
+            screen.blit(bullet_image, bullet_rect)
         screen.blit(player, player_rect)
         for enemy_image, enemy_rect in enemies:
             screen.blit(enemy_image, enemy_rect)
-        for bullet_image, bullet_rect in bullets:
-            screen.blit(bullet_image, bullet_rect)
         screen.blit(spaceship, spaceship_rect)
         screen.blit(score_text, (80, 40))
+        screen.blit(heart, heart_rect)
+        screen.blit(lives_text, (80, 540))
         
             
     else:
@@ -188,6 +209,8 @@ while running:
         enemies.clear()
         bullets.clear()
         score = 0
+        lives = 3
+        enemy_spawn_rate = 3000
         screen.blit(background, (0, 0))
         screen.blit(title_text, title_text_rect)
         screen.blit(instruction_text, instruction_text_rect)
