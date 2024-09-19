@@ -73,10 +73,33 @@ spaceship_rect.topleft = (25, 25)
 score_font = load_font(32)
 score = 0
 
+def load_heart_image(filename):
+    return pygame.image.load(os.path.join("assets", "images", "hearts", f"{filename}.png")).convert_alpha()
+
 # Lives
-heart = load_image("heart")
-heart_rect = heart.get_rect()
+heart_frame_one = load_heart_image("frame-1")
+heart_frame_two = load_heart_image("frame-2")
+heart_frame_three = load_heart_image("frame-3")
+heart_frame_four = load_heart_image("frame-4")
+heart_frame_five = load_heart_image("frame-5")
+heart_frame_six = load_heart_image("frame-6")
+heart_frame_seven = load_heart_image("frame-7")
+heart_frame_eight = load_heart_image("frame-8")
+heart_frames = [
+    heart_frame_one,
+    heart_frame_two,
+    heart_frame_three,
+    heart_frame_four,
+    heart_frame_five,
+    heart_frame_six,
+    heart_frame_seven,
+    heart_frame_eight
+]
+heart_rect = heart_frame_one.get_rect()
 heart_rect.bottomleft = (25, 575)
+current_frame = 0
+frame_delay = 200
+last_frame_time = 0
 lives = 3
 
 # Title screen
@@ -93,6 +116,19 @@ instruction_text_rect.center = (WIDTH // 2, 480)
 title_image = player
 title_image_rect = title_image.get_rect()
 title_image_rect.center = (WIDTH // 2, HEIGHT // 2)
+
+# Sounds
+def load_sound(filename):
+    return pygame.mixer.Sound(os.path.join("assets", "sounds", f"{filename}"))
+
+boom = load_sound("boom.mp3")
+boom.set_volume(0.2)
+shoot = load_sound("shoot.mp3")
+shoot.set_volume(0.2)
+pygame.mixer.music.load(os.path.join("assets", "sounds", "xeon6.ogg"))
+pygame.mixer.music.set_volume(0.2)
+pygame.mixer.music.play()
+
 
 # Main game loop
 game_over = True
@@ -130,6 +166,7 @@ while running:
             bullet_rect.center = player_rect.midright
             bullets.append((bullet_image, bullet_rect))
             last_bullet_time = current_time
+            shoot.play()
 
         # Bullet movement
         for bullet_image, bullet_rect in bullets:
@@ -145,10 +182,12 @@ while running:
         # Collision detection
         for enemy_image, enemy_rect in enemies:
             if enemy_rect.colliderect(player_rect):
+                boom.play()
                 lives -= 1
                 enemies.remove((enemy_image, enemy_rect))
             for bullet_image, bullet_rect in bullets:
                 if enemy_rect.colliderect(bullet_rect) and enemy_rect.right <= 800:
+                    boom.play()
                     score += 1
                     enemies.remove((enemy_image, enemy_rect))
                     bullets.remove((bullet_image, bullet_rect))
@@ -167,6 +206,11 @@ while running:
         # Update lives
         lives_text = score_font.render(f"{lives}", True, WHITE)
         game_over = lives < 1
+
+        # Update hearts
+        if current_time - last_frame_time > frame_delay:
+            current_frame = (current_frame + 1) % len(heart_frames)
+            last_frame_time = current_time
         
         # Enemy spawning
         if current_time - last_enemy_spawn > enemy_spawn_rate:
@@ -197,7 +241,7 @@ while running:
             screen.blit(enemy_image, enemy_rect)
         screen.blit(spaceship, spaceship_rect)
         screen.blit(score_text, (80, 40))
-        screen.blit(heart, heart_rect)
+        screen.blit(heart_frames[current_frame], heart_rect)
         screen.blit(lives_text, (80, 540))
         
             
