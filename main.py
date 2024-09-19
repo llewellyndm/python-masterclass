@@ -63,9 +63,19 @@ bullet_cooldown = 800
 last_bullet_time = 0
 bullets = []
 
+def load_font(font_size):
+    return pygame.font.Font(os.path.join("assets", "fonts", "LuckiestGuy-Regular.ttf"), font_size)
+
+# Score
+spaceship = load_image("spaceship")
+spaceship_rect = spaceship.get_rect()
+spaceship_rect.topleft = (25, 25)
+score_font = load_font(32)
+score = 0
+
 # Title screen
-title_font = pygame.font.Font(os.path.join("assets", "fonts", "LuckiestGuy-Regular.ttf"), 72)
-instruction_font = pygame.font.Font(os.path.join("assets", "fonts", "LuckiestGuy-Regular.ttf"), 32)
+title_font = load_font(72)
+instruction_font = load_font(32)
 title_string = "SPACE ATTACK!"
 instruction_string = "Press ENTER to start"
 title_text = title_font.render(title_string, True, WHITE) # middle param for anti-aliasing
@@ -132,9 +142,12 @@ while running:
                 game_over = True
             for bullet_image, bullet_rect in bullets:
                 if enemy_rect.colliderect(bullet_rect):
+                    score += 1
                     enemies.remove((enemy_image, enemy_rect))
                     bullets.remove((bullet_image, bullet_rect))
 
+        # Update score
+        score_text = score_font.render(f"{score}", True, WHITE)
         
         # Enemy spawning
         if current_time - last_enemy_spawn > enemy_spawn_rate:
@@ -163,6 +176,8 @@ while running:
             screen.blit(enemy_image, enemy_rect)
         for bullet_image, bullet_rect in bullets:
             screen.blit(bullet_image, bullet_rect)
+        screen.blit(spaceship, spaceship_rect)
+        screen.blit(score_text, (80, 40))
         
             
     else:
@@ -172,6 +187,7 @@ while running:
             player_rect.midleft = (25, HEIGHT // 2)
         enemies.clear()
         bullets.clear()
+        score = 0
         screen.blit(background, (0, 0))
         screen.blit(title_text, title_text_rect)
         screen.blit(instruction_text, instruction_text_rect)
