@@ -3,6 +3,45 @@ import sys
 import os
 import random
 
+# class Player
+# image, rect, position, speed
+
+# class Bullet
+# image, rect, position, speed
+
+# class Enemy
+# image, rect, position, speed
+
+# class Background
+# image, rect, position (x), scroll_speed
+
+# class HUD
+# score_icon, score_icon_rect, score_text, score_text_rect
+
+# class TitleScreen
+
+
+def load_sound(filename):
+    return pygame.mixer.Sound(os.path.join("assets", "sounds", f"{filename}"))
+
+class Sounds():
+    def __init__(self):
+        self.boom = load_sound("boom.mp3")
+        self.boom.set_volume(0.2)
+
+        self.shoot = load_sound("shoot.mp3")
+        self.shoot.set_volume(0.2)
+
+        pygame.mixer.music.load(os.path.join("assets", "sounds", "xeon6.ogg"))
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play(-1) # -1 loops music
+    
+    def play_boom(self):
+        self.boom.play()
+
+    def play_shoot(self):
+        self.shoot.play()
+
 # Initialize Pygame
 pygame.init()
 
@@ -118,16 +157,7 @@ title_image_rect = title_image.get_rect()
 title_image_rect.center = (WIDTH // 2, HEIGHT // 2)
 
 # Sounds
-def load_sound(filename):
-    return pygame.mixer.Sound(os.path.join("assets", "sounds", f"{filename}"))
-
-boom = load_sound("boom.mp3")
-boom.set_volume(0.2)
-shoot = load_sound("shoot.mp3")
-shoot.set_volume(0.2)
-pygame.mixer.music.load(os.path.join("assets", "sounds", "xeon6.ogg"))
-pygame.mixer.music.set_volume(0.2)
-pygame.mixer.music.play()
+sounds = Sounds()
 
 
 # Main game loop
@@ -166,7 +196,7 @@ while running:
             bullet_rect.center = player_rect.midright
             bullets.append((bullet_image, bullet_rect))
             last_bullet_time = current_time
-            shoot.play()
+            sounds.play_shoot()
 
         # Bullet movement
         for bullet_image, bullet_rect in bullets:
@@ -182,12 +212,12 @@ while running:
         # Collision detection
         for enemy_image, enemy_rect in enemies:
             if enemy_rect.colliderect(player_rect):
-                boom.play()
+                sounds.play_boom()
                 lives -= 1
                 enemies.remove((enemy_image, enemy_rect))
             for bullet_image, bullet_rect in bullets:
                 if enemy_rect.colliderect(bullet_rect) and enemy_rect.right <= 800:
-                    boom.play()
+                    sounds.play_boom()
                     score += 1
                     enemies.remove((enemy_image, enemy_rect))
                     bullets.remove((bullet_image, bullet_rect))
