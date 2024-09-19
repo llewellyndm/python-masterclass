@@ -130,6 +130,9 @@ enemy_spawn_rate = 3000
 last_enemy_spawn = 0
 enemies = []
 
+# Enemy shield
+enemy_shield = load_image("enemy_shield")
+
 # Bullets
 bullet = load_image("bullet")
 bullet_cooldown = 800
@@ -223,22 +226,23 @@ while running:
         bullets = [(bullet_image, bullet_rect) for bullet_image, bullet_rect in bullets if bullet_rect.left < WIDTH]
 
         # Enemy movement
-        for enemy_image, enemy_rect in enemies:
+        for enemy_image, enemy_rect, enemy_shield_active in enemies:
             enemy_rect.x -= enemy_speed
         # then get rid of enemies that have left screen to avoid memory issues
-        enemies = [(enemy_image, enemy_rect) for enemy_image, enemy_rect in enemies if enemy_rect.right > 0]
+        enemies = [(enemy_image, enemy_rect, enemy_shield_active) for enemy_image, enemy_rect, enemy_shield_active in enemies if enemy_rect.right > 0]
         
         # Collision detection
-        for enemy_image, enemy_rect in enemies:
+        for enemy_image, enemy_rect, enemy_shield_active in enemies:
             if enemy_rect.colliderect(player_rect):
                 sounds.play_boom()
                 lives -= 1
-                enemies.remove((enemy_image, enemy_rect))
+                enemies.remove((enemy_image, enemy_rect, enemy_shield_active))
             for bullet_image, bullet_rect in bullets:
                 if enemy_rect.colliderect(bullet_rect) and enemy_rect.right <= 800:
-                    sounds.play_boom()
-                    score += 1
-                    enemies.remove((enemy_image, enemy_rect))
+                    if not enemy_shield_active:
+                        sounds.play_boom()
+                        score += 1
+                        enemies.remove((enemy_image, enemy_rect, enemy_shield_active))
                     bullets.remove((bullet_image, bullet_rect))
 
         # Update score
@@ -273,7 +277,10 @@ while running:
                 enemy_rect.y = (HEIGHT // 2) - (enemy_rect.height // 2)
             else:
                 enemy_rect.y = HEIGHT - enemy_rect.height
-            enemies.append((enemy_image, enemy_rect))
+
+            # enemy shield - 33% chance of spawning
+            enemy_shield_active = random.random() < 1/3
+            enemies.append((enemy_image, enemy_rect, enemy_shield_active))
             last_enemy_spawn = current_time
 
 
@@ -286,8 +293,10 @@ while running:
         for bullet_image, bullet_rect in bullets:
             screen.blit(bullet_image, bullet_rect)
         screen.blit(player, player_rect)
-        for enemy_image, enemy_rect in enemies:
+        for enemy_image, enemy_rect, enemy_shield_active in enemies:
             screen.blit(enemy_image, enemy_rect)
+            if enemy_shield_active:
+                screen.blit(enemy_shield, enemy_rect)
         screen.blit(spaceship, spaceship_rect)
         screen.blit(score_text, (80, 40))
         screen.blit(heart_frames[current_frame], heart_rect)
