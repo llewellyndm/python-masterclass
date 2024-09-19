@@ -2,9 +2,30 @@ import pygame
 import sys
 import os
 import random
+import math
+
+# Helper functions to load in assets
+def load_image(filename):
+    # convert to alpha as more performant
+    return pygame.image.load(os.path.join("assets", "images", f"{filename}.png")).convert_alpha()
+
+def load_font(font_size):
+    return pygame.font.Font(os.path.join("assets", "fonts", "LuckiestGuy-Regular.ttf"), font_size)
+
+def load_heart_image(filename):
+    return pygame.image.load(os.path.join("assets", "images", "hearts", f"{filename}.png")).convert_alpha()
+
+def load_sound(filename):
+    return pygame.mixer.Sound(os.path.join("assets", "sounds", f"{filename}"))
+
 
 # class Player
 # image, rect, position, speed
+
+
+# player = load_image("spaceship_pl")
+# player_rect = player.get_rect()
+# player_rect.midleft = (25, HEIGHT // 2) # double slash for integer division
 
 # class Bullet
 # image, rect, position, speed
@@ -18,11 +39,30 @@ import random
 # class HUD
 # score_icon, score_icon_rect, score_text, score_text_rect
 
-# class TitleScreen
+class TitleScreen():
+    def __init__(self, title_string, instruction_string):
+        self.title_font = load_font(72)
+        self.instruction_font = load_font(32)
+        self.title_string = title_string
+        self.instruction_string = instruction_string
+        self.title_text = self.title_font.render(title_string, True, WHITE)
+        self.instruction_text = self.instruction_font.render(instruction_string, True, WHITE)
+        self.title_text_rect = self.title_text.get_rect()
+        self.title_text_rect.center = (WIDTH // 2, 120)
+        self.instruction_text_rect = self.instruction_text.get_rect()
+        self.instruction_text_rect.center = (WIDTH // 2, 480)
+        self.title_image = player
+        self.title_image_rect = self.title_image.get_rect()
+        self.title_image_rect.center = (WIDTH // 2, HEIGHT // 2)
+    
+    def draw(self, current_time):
+        screen.blit(self.title_text, self.title_text_rect)
+        screen.blit(self.instruction_text, self.instruction_text_rect)
+        screen.blit(self.title_image, self.title_image_rect)
+        # floaty animation
+        self.title_image_rect.centery = (HEIGHT // 2) + 20 * math.sin(current_time / 500)
+    
 
-
-def load_sound(filename):
-    return pygame.mixer.Sound(os.path.join("assets", "sounds", f"{filename}"))
 
 class Sounds():
     def __init__(self):
@@ -73,12 +113,6 @@ background_rect_one.x = 0
 background_rect_two = background.get_rect()
 background_rect_two.x = WIDTH
 
-
-def load_image(filename):
-    # convert to alpha as more performant
-    return pygame.image.load(os.path.join("assets", "images", f"{filename}.png")).convert_alpha()
-
-
 # Player
 player = load_image("spaceship_pl")
 player_rect = player.get_rect()
@@ -102,18 +136,12 @@ bullet_cooldown = 800
 last_bullet_time = 0
 bullets = []
 
-def load_font(font_size):
-    return pygame.font.Font(os.path.join("assets", "fonts", "LuckiestGuy-Regular.ttf"), font_size)
-
 # Score
 spaceship = load_image("spaceship")
 spaceship_rect = spaceship.get_rect()
 spaceship_rect.topleft = (25, 25)
 score_font = load_font(32)
 score = 0
-
-def load_heart_image(filename):
-    return pygame.image.load(os.path.join("assets", "images", "hearts", f"{filename}.png")).convert_alpha()
 
 # Lives
 heart_frame_one = load_heart_image("frame-1")
@@ -142,19 +170,7 @@ last_frame_time = 0
 lives = 3
 
 # Title screen
-title_font = load_font(72)
-instruction_font = load_font(32)
-title_string = "SPACE ATTACK!"
-instruction_string = "Press ENTER to start"
-title_text = title_font.render(title_string, True, WHITE) # middle param for anti-aliasing
-instruction_text = instruction_font.render(instruction_string, True, WHITE)
-title_text_rect = title_text.get_rect()
-title_text_rect.center = (WIDTH // 2, 120)
-instruction_text_rect = instruction_text.get_rect()
-instruction_text_rect.center = (WIDTH // 2, 480)
-title_image = player
-title_image_rect = title_image.get_rect()
-title_image_rect.center = (WIDTH // 2, HEIGHT // 2)
+title_screen = TitleScreen("SPACE ATTACK!", "Press ENTER to start")
 
 # Sounds
 sounds = Sounds()
@@ -168,10 +184,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    
+    
+    current_time = pygame.time.get_ticks()
 
     if not game_over:
         # Game logic
-        current_time = pygame.time.get_ticks()
+        # current_time = pygame.time.get_ticks()
 
         # Background scrolling
         if background_rect_one.x < -800:
@@ -286,9 +305,7 @@ while running:
         lives = 3
         enemy_spawn_rate = 3000
         screen.blit(background, (0, 0))
-        screen.blit(title_text, title_text_rect)
-        screen.blit(instruction_text, instruction_text_rect)
-        screen.blit(title_image, title_image_rect)
+        title_screen.draw(current_time)
 
     # Update display
     pygame.display.update()
